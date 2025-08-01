@@ -28,6 +28,18 @@ export default function ProductsPage() {
     loadProducts();
   }, []);
 
+const handleDelete = async (id: number) => {
+  if (confirm("¿Eliminar este producto?")) {
+    try {
+      await API.delete(`/products/${id}`);
+      loadProducts();
+    } catch (err) {
+      console.error("Error al eliminar producto:", err);
+    }
+  }
+};
+
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4 text-green-600">Productos</h1>
@@ -36,14 +48,21 @@ export default function ProductsPage() {
 
       <ul className="space-y-4">
         {products.map((prod) => (
-          <li key={prod.id} className="bg-green-100 p-4 rounded shadow">
-            <p className="font-semibold">{prod.name}</p>
-            <p className="text-sm">{prod.description}</p>
-            <p className="text-sm text-gray-600">Precio: ${prod.price}</p>
-            <p className="text-sm text-blue-700">
-              Categoría: {prod.category.name}
-            </p>
-          </li>
+          <li key={prod.id} className="bg-green-100 p-4 rounded shadow flex justify-between items-center">
+  <div>
+    <p className="font-semibold">{prod.name}</p>
+    <p className="text-sm">{prod.description}</p>
+    <p className="text-sm text-gray-600">Precio: ${prod.price}</p>
+    <p className="text-sm text-blue-700">Categoría: {prod.category.name}</p>
+  </div>
+  <button
+    onClick={() => handleDelete(prod.id)}
+    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+  >
+    Eliminar
+  </button>
+</li>
+
         ))}
       </ul>
     </div>
