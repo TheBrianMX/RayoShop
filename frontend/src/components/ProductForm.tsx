@@ -6,7 +6,21 @@ interface Category {
   name: string;
 }
 
-export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: Category;
+}
+
+interface Props {
+  onCreated?: () => void;
+  productToEdit?: Product | null;
+  onFinishEdit?: () => void;
+}
+
+export default function ProductForm({ onCreated, productToEdit, onFinishEdit }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -19,30 +33,54 @@ export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
       .catch((err) => console.error("Error al cargar categorías:", err));
   }, []);
 
+  useEffect(() => {
+    if (productToEdit) {
+      setName(productToEdit.name);
+      setDescription(productToEdit.description);
+      setPrice(productToEdit.price.toString());
+      setCategoryId(productToEdit.category.id.toString());
+    } else {
+      setName("");
+      setDescription("");
+      setPrice("");
+      setCategoryId("");
+    }
+  }, [productToEdit]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const data = {
+      name,
+      description,
+      price: parseFloat(price),
+      category: {
+        id: parseInt(categoryId),
+      },
+    };
+
     try {
-      await API.post("/products", {
-        name,
-        description,
-        price: parseFloat(price),
-        category: {
-          id: parseInt(categoryId),
-        },
-      });
+      if (productToEdit) {
+        await API.put(`/products/${productToEdit.id}`, data);
+      } else {
+        await API.post("/products", data);
+      }
+
       setName("");
       setDescription("");
       setPrice("");
       setCategoryId("");
       onCreated?.();
+      onFinishEdit?.();
     } catch (err) {
-      console.error("Error al crear producto:", err);
+      console.error("Error al guardar producto:", err);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-6">
-      <h2 className="text-lg font-semibold mb-2">Nuevo Producto</h2>
+      <h2 className="text-lg font-semibold mb-2">
+        {productToEdit ? "Editar Producto" : "Nuevo Producto"}
+      </h2>
 
       <input
         type="text"
@@ -86,7 +124,7 @@ export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
         type="submit"
         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
       >
-        Crear Producto
+        {productToEdit ? "Guardar Cambios" : "Crear Producto"}
       </button>
     </form>
   );

@@ -1,27 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../services/api";
 
-export default function UserForm({ onCreated }: { onCreated?: () => void }) {
+interface User {
+  id: number;
+  name: string;
+  lastname: string;
+  role: string;
+}
+
+interface Props {
+  onCreated?: () => void;
+  userToEdit?: User | null;
+  onFinishEdit?: () => void;
+}
+
+export default function UserForm({ onCreated, userToEdit, onFinishEdit }: Props) {
   const [name, setName] = useState("");
   const [lastname, setLastname] = useState("");
   const [role, setRole] = useState("USER");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await API.post("/users", { name, lastname, role });
+  useEffect(() => {
+    if (userToEdit) {
+      setName(userToEdit.name);
+      setLastname(userToEdit.lastname);
+      setRole(userToEdit.role);
+    } else {
       setName("");
       setLastname("");
       setRole("USER");
-      onCreated?.(); // para recargar la lista si se desea
+    }
+  }, [userToEdit]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      if (userToEdit) {
+        // PUT (editar)
+        await API.put(`/users/${userToEdit.id}`, {
+          name,
+          lastname,
+          role,
+        });
+      } else {
+        // POST (crear)
+        await API.post("/users", {
+          name,
+          lastname,
+          role,
+        });
+      }
+
+      setName("");
+      setLastname("");
+      setRole("USER");
+      onCreated?.();
+      onFinishEdit?.();
     } catch (err) {
-      console.error("Error al crear usuario:", err);
+      console.error("Error al guardar usuario:", err);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-6">
-      <h2 className="text-lg font-semibold mb-2">Nuevo Usuario</h2>
+      <h2 className="text-lg font-semibold mb-2">
+        {userToEdit ? "Editar Usuario" : "Nuevo Usuario"}
+      </h2>
       <input
         type="text"
         placeholder="Nombre"
@@ -50,7 +94,7 @@ export default function UserForm({ onCreated }: { onCreated?: () => void }) {
         type="submit"
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
-        Crear Usuario
+        {userToEdit ? "Guardar Cambios" : "Crear Usuario"}
       </button>
     </form>
   );

@@ -1,25 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../services/api";
 
-export default function CategoryForm({ onCreated }: { onCreated?: () => void }) {
+interface Category {
+  id: number;
+  name: string;
+  description?: string | null;
+}
+
+interface Props {
+  onCreated?: () => void;
+  categoryToEdit?: Category | null;
+  onFinishEdit?: () => void;
+}
+
+export default function CategoryForm({ onCreated, categoryToEdit, onFinishEdit }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    if (categoryToEdit) {
+      setName(categoryToEdit.name);
+      setDescription(categoryToEdit.description || "");
+    } else {
+      setName("");
+      setDescription("");
+    }
+  }, [categoryToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await API.post("/categories", { name, description });
+      if (categoryToEdit) {
+        await API.put(`/categories/${categoryToEdit.id}`, {
+          name,
+          description,
+        });
+      } else {
+        await API.post("/categories", {
+          name,
+          description,
+        });
+      }
+
       setName("");
       setDescription("");
-      onCreated?.(); // recargar categorías
+      onCreated?.();
+      onFinishEdit?.();
     } catch (err) {
-      console.error("Error al crear categoría:", err);
+      console.error("Error al guardar categoría:", err);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-6">
-      <h2 className="text-lg font-semibold mb-2">Nueva Categoría</h2>
+      <h2 className="text-lg font-semibold mb-2">
+        {categoryToEdit ? "Editar Categoría" : "Nueva Categoría"}
+      </h2>
       <input
         type="text"
         placeholder="Nombre"
@@ -38,7 +74,7 @@ export default function CategoryForm({ onCreated }: { onCreated?: () => void }) 
         type="submit"
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
-        Crear Categoría
+        {categoryToEdit ? "Guardar Cambios" : "Crear Categoría"}
       </button>
     </form>
   );
