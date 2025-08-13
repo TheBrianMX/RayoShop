@@ -14,6 +14,7 @@ export default function CategoryForm({
   onCancel?: () => void;
 }) {
   const [name, setName] = useState(initialData?.name ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,10 +23,11 @@ export default function CategoryForm({
     setError(null);
 
     if (!name.trim()) return setError("El nombre es obligatorio");
+    if (!description.trim()) return setError("La descripción es obligatoria");
 
     try {
       setSaving(true);
-      await onSubmit({ name: name.trim() });
+      await onSubmit({ name: name.trim(), description: description.trim() });
     } catch (e: any) {
       setError(e?.response?.data?.message ?? e?.message ?? "Error al guardar");
     } finally {
@@ -41,7 +43,7 @@ export default function CategoryForm({
         </div>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700" htmlFor="name">
           Nombre de la categoría
         </label>
@@ -51,6 +53,19 @@ export default function CategoryForm({
           onChange={(e) => setName(e.target.value)}
           className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/40"
           placeholder="Ej. Electrónica"
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-slate-700" htmlFor="description">
+          Descripción
+        </label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="min-h-[96px] w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/40"
+          placeholder="Describe la categoría"
         />
       </div>
 

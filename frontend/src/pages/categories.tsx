@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import CategoryForm from "@/components/CategoryForm";
+
 import {
   listCategories,
   deleteCategory,
@@ -10,6 +11,7 @@ import {
 } from "@/services/categories";
 
 type FormValues = Omit<Category, "id">;
+
 
 export default function CategoriesPage() {
   const [items, setItems] = useState<Category[]>([]);
@@ -90,19 +92,20 @@ export default function CategoriesPage() {
             <tr>
               <th className="px-4 py-3 text-left">ID</th>
               <th className="px-4 py-3 text-left">Nombre</th>
+              <th className="px-4 py-3 text-left">Descripción</th>
               <th className="px-4 py-3 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
                   Cargando...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
                   No hay categorías
                 </td>
               </tr>
@@ -111,6 +114,7 @@ export default function CategoriesPage() {
                 <tr key={c.id} className="border-t border-slate-100">
                   <td className="px-4 py-3">{c.id}</td>
                   <td className="px-4 py-3">{c.name}</td>
+                  <td className="px-4 py-3">{c.description}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex gap-2">
                       <Button variant="ghost" onClick={() => openEdit(c)}>
@@ -150,7 +154,7 @@ export default function CategoriesPage() {
             </header>
 
             <CategoryForm
-              initialData={editing ? { name: editing.name } : undefined}
+              initialData={editing ? { name: editing.name, description: editing.description } : undefined}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setOpen(false);
