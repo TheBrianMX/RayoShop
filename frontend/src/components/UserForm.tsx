@@ -1,101 +1,100 @@
-import { useState, useEffect } from "react";
-import API from "../services/api";
+import { useState } from "react";
+import Button from "./ui/Button";
+import type { User } from "../services/api";
 
-interface User {
-  id: number;
-  name: string;
-  lastname: string;
-  role: string;
-}
+type FormValues = Omit<User, "id">;
 
-interface Props {
-  onCreated?: () => void;
-  userToEdit?: User | null;
-  onFinishEdit?: () => void;
-}
+export default function UserForm({
+  initialData,
+  onSubmit,
+  onCancel,
+}: {
+  initialData?: FormValues;
+  onSubmit: (values: FormValues) => Promise<void> | void;
+  onCancel?: () => void;
+}) {
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [lastname, setLastname] = useState(initialData?.lastname ?? "");
+  const [role, setRole] = useState<FormValues["role"]>(initialData?.role ?? "USER");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default function UserForm({ onCreated, userToEdit, onFinishEdit }: Props) {
-  const [name, setName] = useState("");
-  const [lastname, setLastname] = useState("");
-  const [role, setRole] = useState("USER");
-
-  useEffect(() => {
-    if (userToEdit) {
-      setName(userToEdit.name);
-      setLastname(userToEdit.lastname);
-      setRole(userToEdit.role);
-    } else {
-      setName("");
-      setLastname("");
-      setRole("USER");
-    }
-  }, [userToEdit]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    if (!name.trim()) return setError("El nombre es obligatorio");
+    if (!lastname.trim()) return setError("El apellido es obligatorio");
 
     try {
-      if (userToEdit) {
-        // PUT (editar)
-        await API.put(`/users/${userToEdit.id}`, {
-          name,
-          lastname,
-          role,
-        });
-      } else {
-        // POST (crear)
-        await API.post("/users", {
-          name,
-          lastname,
-          role,
-        });
-      }
-
-      setName("");
-      setLastname("");
-      setRole("USER");
-      onCreated?.();
-      onFinishEdit?.();
-    } catch (err) {
-      console.error("Error al guardar usuario:", err);
+      setSaving(true);
+      await onSubmit({ name: name.trim(), lastname: lastname.trim(), role });
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? e?.message ?? "Error al guardar");
+    } finally {
+      setSaving(false);
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-6">
-      <h2 className="text-lg font-semibold mb-2">
-        {userToEdit ? "Editar Usuario" : "Nuevo Usuario"}
-      </h2>
-      <input
-        type="text"
-        placeholder="Nombre"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="block w-full mb-2 p-2 border rounded"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Apellido"
-        value={lastname}
-        onChange={(e) => setLastname(e.target.value)}
-        className="block w-full mb-2 p-2 border rounded"
-        required
-      />
-      <select
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-        className="block w-full mb-2 p-2 border rounded"
-      >
-        <option value="USER">Usuario</option>
-        <option value="ADMIN">Administrador</option>
-      </select>
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        {userToEdit ? "Guardar Cambios" : "Crear Usuario"}
-      </button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        <label className="text-sm font-medium text-slate-700" htmlFor="name">
+          Nombre
+        </label>
+        <input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/40"
+          placeholder="Nombre"
+        />
+      </div>
+
+      <div className="grid gap-3">
+        <label className="text-sm font-medium text-slate-700" htmlFor="lastname">
+          Apellido
+        </label>
+        <input
+          id="lastname"
+          value={lastname}
+          onChange={(e) => setLastname(e.target.value)}
+          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/40"
+          placeholder="Apellido"
+        />
+      </div>
+
+      <div className="grid gap-3">
+        <label className="text-sm font-medium text-slate-700" htmlFor="role">
+          Rol
+        </label>
+        <select
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value as FormValues["role"])}
+          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/40"
+        >
+          <option value="ADMIN">ADMIN</option>
+          <option value="USER">USER</option>
+        </select>
+      </div>
+
+      <div className="mt-6 flex justify-end gap-2">
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={saving}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={saving}>
+          {saving ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
     </form>
   );
 }

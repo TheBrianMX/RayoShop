@@ -1,7 +1,14 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "http://localhost:8080/api",
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // ej. http://localhost:8080/api
+  headers: { "Content-Type": "application/json" },
 });
 
-export default API;
+// Tipos compartidos
+export type User = {
+  id: number;
+  name: string;
+  lastname: string;
+  role: "ADMIN" | "USER";
+};
