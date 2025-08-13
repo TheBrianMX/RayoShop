@@ -76,7 +76,7 @@ export default function CategoriesPage() {
   return (
     <section className="space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Categorías</h1>
+        <h1 className="text-2xl font-bold text-white">Categorias</h1>
         <Button onClick={openCreate}>Nueva categoría</Button>
       </header>
 

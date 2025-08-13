@@ -70,7 +70,7 @@ export default function ProductsPage() {
   return (
     <section className="space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Productos</h1>
+        <h1 className="text-2xl font-bold text-white">Productos</h1>
         <Button onClick={() => { setEditing(null); setOpen(true); }}>
           Nuevo producto
         </Button>

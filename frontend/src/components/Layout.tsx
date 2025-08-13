@@ -1,32 +1,18 @@
-import { ReactNode } from "react";
-import Link from "next/link";
+import Navbar from "./Navbar";
 
-interface Props {
-    children: ReactNode;
-}   
-
-export default function Layout({ children }: Props) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between">
-        <h1 className="text-xl font-bold">RayoShop</h1>
-        <div className="space-x-4">
-          <Link href="/" className="hover:underline">
-            Inicio
-          </Link>
-          <Link href="/users" className="hover:underline">
-            Usuarios
-          </Link>
-          <Link href="/categories" className="hover:underline">
-            Categorías
-          </Link>
-          <Link href="/products" className="hover:underline">
-            Productos
-          </Link>
-        </div>
-      </nav>
+    <div className="relative isolate min-h-screen">
+      {/* Fondo gradiente animado estilo dark mode elegante */}
+      <div aria-hidden className="fixed inset-0 -z-10 animate-gradient">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-800 to-gray-200 bg-[length:200%_200%]" />
+        <div className="absolute inset-0 bg-[radial-gradient(500px_at_50%_200px,rgba(255,255,255,0.15)_0,transparent_70%)]" />
+      </div>
 
-      <main className="p-6 max-w-5xl mx-auto">{children}</main>
+      <Navbar />
+
+      {/* Padding para que el contenido no se encime con el navbar */}
+      <main className="px-6 pt-28 pb-6">{children}</main>
     </div>
   );
 }
