@@ -1,81 +1,69 @@
-import { useState, useEffect } from "react";
-import API from "../services/api";
+import { useState } from "react";
+import Button from "./ui/Button";
+import type { Category } from "@/services/categories";
 
-interface Category {
-  id: number;
-  name: string;
-  description?: string | null;
-}
+type FormValues = Omit<Category, "id">;
 
-interface Props {
-  onCreated?: () => void;
-  categoryToEdit?: Category | null;
-  onFinishEdit?: () => void;
-}
+export default function CategoryForm({
+  initialData,
+  onSubmit,
+  onCancel,
+}: {
+  initialData?: FormValues;
+  onSubmit: (values: FormValues) => Promise<void> | void;
+  onCancel?: () => void;
+}) {
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default function CategoryForm({ onCreated, categoryToEdit, onFinishEdit }: Props) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-
-  useEffect(() => {
-    if (categoryToEdit) {
-      setName(categoryToEdit.name);
-      setDescription(categoryToEdit.description || "");
-    } else {
-      setName("");
-      setDescription("");
-    }
-  }, [categoryToEdit]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    try {
-      if (categoryToEdit) {
-        await API.put(`/categories/${categoryToEdit.id}`, {
-          name,
-          description,
-        });
-      } else {
-        await API.post("/categories", {
-          name,
-          description,
-        });
-      }
+    setError(null);
 
-      setName("");
-      setDescription("");
-      onCreated?.();
-      onFinishEdit?.();
-    } catch (err) {
-      console.error("Error al guardar categoría:", err);
+    if (!name.trim()) return setError("El nombre es obligatorio");
+
+    try {
+      setSaving(true);
+      await onSubmit({ name: name.trim() });
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? e?.message ?? "Error al guardar");
+    } finally {
+      setSaving(false);
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-6">
-      <h2 className="text-lg font-semibold mb-2">
-        {categoryToEdit ? "Editar Categoría" : "Nueva Categoría"}
-      </h2>
-      <input
-        type="text"
-        placeholder="Nombre"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="block w-full mb-2 p-2 border rounded"
-        required
-      />
-      <textarea
-        placeholder="Descripción (opcional)"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="block w-full mb-2 p-2 border rounded"
-      />
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        {categoryToEdit ? "Guardar Cambios" : "Crear Categoría"}
-      </button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        <label className="text-sm font-medium text-slate-700" htmlFor="name">
+          Nombre de la categoría
+        </label>
+        <input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/40"
+          placeholder="Ej. Electrónica"
+        />
+      </div>
+
+      <div className="mt-6 flex justify-end gap-2">
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={saving}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" disabled={saving}>
+          {saving ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
     </form>
   );
 }
